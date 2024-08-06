@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <script src="socket.io/socket.io.js"></script>
+    <style>
+        html,body{margin:0;padding:0}
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="128" height="128"></canvas>
+    <div id="btns"></div>
+    <script>
+        const colors = {0: '#000000', 1: '#005500',  2: '#00aa00',  3: '#00ff00', 
+                        4: '#0000ff', 5: '#0055ff',  6: '#00aaff',  7: '#00ffff',
+                        8: '#ff0000', 9: '#ff5500', 10: '#ffaa00', 11: '#ffff00', 
+                       12: '#ff00ff', 13: '#ff55ff', 14: '#ffaaff', 15: '#ffffff'
+        }
+        var colorInd = 0;
+
+        var btns = document.getElementById("btns");
+        Object.entries(colors).forEach((color) => {
+            var button = document.createElement('button');
+            // Set button properties
+            button.innerText = color[0];
+            button.addEventListener('click', function() {
+                context.fillStyle = colors[color[1]];
+            });
+            btns.appendChild(button);
+        });
+        
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const socket = io();
+
+        // Load existing drawing from the server
+        socket.on('loadDrawing', (pixels) => {
+            pixels.forEach(pixel => {
+                context.fillStyle = colors[colorInd];
+                context.fillRect(pixel.x, pixel.y, 1, 1);
+            });
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            const draw = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                context.fillRect(x, y, 1, 1);
+                socket.emit('draw', {bit: '#'+(x+y*128), color: colorInd });
+            };
+            draw(e);
+            canvas.addEventListener('mousemove', draw);
+            document.addEventListener('mouseup', () => {
+                canvas.removeEventListener('mousemove', draw);
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>
