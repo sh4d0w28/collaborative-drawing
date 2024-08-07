@@ -10,9 +10,11 @@
     </style>
 </head>
 <body>
-    <canvas id="canvas" width="128" height="128"></canvas>
+    <canvas id="canvas" width="128" height="128" style="border: solid 1px black;"></canvas>
     <div id="btns"></div>
     <script>
+        const dimX=128;
+        const dimY=128;
         const colors = {0: '#000000', 1: '#005500',  2: '#00aa00',  3: '#00ff00', 
                         4: '#0000ff', 5: '#0055ff',  6: '#00aaff',  7: '#00ffff',
                         8: '#ff0000', 9: '#ff5500', 10: '#ffaa00', 11: '#ffff00', 
@@ -20,13 +22,16 @@
         }
         var colorInd = 0;
 
+        /* generate buttons */
         var btns = document.getElementById("btns");
         Object.entries(colors).forEach((color) => {
             var button = document.createElement('button');
-            // Set button properties
-            button.innerText = color[0];
+            button.setAttribute('data-id', color[0])
+            // button.innerText = color[0];
+            button.style.backgroundColor = color[1];
             button.addEventListener('click', function() {
-                context.fillStyle = colors[color[1]];
+                colorInd = this.dataset['id'];
+                context.fillStyle = colors[colorInd];
             });
             btns.appendChild(button);
         });
@@ -36,20 +41,33 @@
         const socket = io();
 
         // Load existing drawing from the server
-        socket.on('loadDrawing', (pixels) => {
-            pixels.forEach(pixel => {
-                context.fillStyle = colors[colorInd];
-                context.fillRect(pixel.x, pixel.y, 1, 1);
-            });
+        socket.on('loadDrawing', (data) => {
+            var imageData = new ImageData(new Uint8ClampedArray(data),dimX,dimY)
+            console.log(imageData);
+            context.putImageData(imageData, 0, 0)
         });
+
+
+        socket.on('draw', (data) => {
+            var fs = context.fillStyle;
+            context.fillStyle = colors[data.color];
+            context.fillRect(data.x, data.y, 1, 1);
+            context.fillStyle = fs;
+        })
 
         canvas.addEventListener('mousedown', (e) => {
             const draw = (e) => {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+                const x = e.offsetX;
+                const y = e.offsetY;
+                /* simple check for mousemove outside */
+                if (x<0 || y<0) { return; }
+                if (x>=dimX || y>=dimY) { return; }
+
+                /* draw */
                 context.fillRect(x, y, 1, 1);
-                socket.emit('draw', {bit: '#'+(x+y*128), color: colorInd });
+
+                /* send bit to server */
+                socket.emit('draw', {bit: '#'+(x+y*dimY), color: colorInd, x:x, y:y });
             };
             draw(e);
             canvas.addEventListener('mousemove', draw);
