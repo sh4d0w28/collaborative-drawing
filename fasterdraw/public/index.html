@@ -12,11 +12,10 @@
 <body>
     <canvas id="canvas" width="128" height="128" style="border: solid 1px black;"></canvas>
     <div id="btns"></div>
-    <select id="size">
-        <option value="1">1</option>
+    <select id="size" onchange="setBrush(this);" onfocus="this.selectedIndex = -1;">
+        <option value="1" selected="selected">1</option>
+        <option value="2">2</option>
         <option value="3">3</option>
-        <option value="5">5</option>
-        <option value="7">7</option>
       </select>
     <script>
         const dimX=128;
@@ -27,19 +26,30 @@
                        12: '#ff00ff', 13: '#ff55ff', 14: '#ffaaff', 15: '#ffffff'
         }
         var colorInd = 0;
+        var brushSize = 1;
+
+        function setBrush(sender) {
+            brushSize = sender.value;
+        }
 
         /* generate buttons */
         var btns = document.getElementById("btns");
-        Object.entries(colors).forEach((color) => {
+        Object.entries(colors).forEach((color, i) => {
             var button = document.createElement('button');
             button.setAttribute('data-id', color[0])
-            button.innerText = "&nbsp;"
             button.style.backgroundColor = color[1];
+            button.style.width = "15px"
+            button.style.height = "15px"
+            button.style.display = "inline-block";
+
             button.addEventListener('click', function() {
                 colorInd = this.dataset['id'];
                 context.fillStyle = colors[colorInd];
             });
             btns.appendChild(button);
+            if(i % 4 == 3) { 
+                btns.append(document.createElement("br"))
+            }
         });
         
         const canvas = document.getElementById('canvas');
@@ -62,11 +72,11 @@
             });
         })
 
-        function draw(context, x,y, size) {
+        function drawBrush(context, x,y, size) {
             var rx = x-size;
             var ry = y-size;
             /* draw */
-            context.fillRect(rx,ry,size*2+1);
+            context.fillRect(rx,ry,size*2+1,size*2+1);
             var bits = []
             for(var i = Math.max(x-size, 0); i <= Math.min(x+size, dimX-1); i++) {
                 for(var j = Math.max(y-size,0); j<=Math.min(j+size, dimY-1); j++) {
@@ -85,11 +95,7 @@
                 if (x<0 || y<0) { return; }
                 if (x>=dimX || y>=dimY) { return; }
 
-                /* draw */
-                context.fillRect(x, y, 1, 1);
-
-                /* send bit to server */
-                socket.emit('draw', {bit: '#'+(x+y*dimY), color: colorInd, x:x, y:y });
+                drawBrush(context, x, y, brushSize);
             };
             draw(e);
             canvas.addEventListener('mousemove', draw);
