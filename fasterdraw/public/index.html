@@ -12,6 +12,12 @@
 <body>
     <canvas id="canvas" width="128" height="128" style="border: solid 1px black;"></canvas>
     <div id="btns"></div>
+    <select id="size">
+        <option value="1">1</option>
+        <option value="3">3</option>
+        <option value="5">5</option>
+        <option value="7">7</option>
+      </select>
     <script>
         const dimX=128;
         const dimY=128;
@@ -27,7 +33,7 @@
         Object.entries(colors).forEach((color) => {
             var button = document.createElement('button');
             button.setAttribute('data-id', color[0])
-            // button.innerText = color[0];
+            button.innerText = "&nbsp;"
             button.style.backgroundColor = color[1];
             button.addEventListener('click', function() {
                 colorInd = this.dataset['id'];
@@ -47,13 +53,29 @@
             context.putImageData(imageData, 0, 0)
         });
 
-
         socket.on('draw', (data) => {
-            var fs = context.fillStyle;
-            context.fillStyle = colors[data.color];
-            context.fillRect(data.x, data.y, 1, 1);
-            context.fillStyle = fs;
+            data.forEach((bitspec) => {
+                var fs = context.fillStyle;
+                context.fillStyle = colors[data.color];
+                context.fillRect(data.x, data.y, 1, 1);
+                context.fillStyle = fs;            
+            });
         })
+
+        function draw(context, x,y, size) {
+            var rx = x-size;
+            var ry = y-size;
+            /* draw */
+            context.fillRect(rx,ry,size*2+1);
+            var bits = []
+            for(var i = Math.max(x-size, 0); i <= Math.min(x+size, dimX-1); i++) {
+                for(var j = Math.max(y-size,0); j<=Math.min(j+size, dimY-1); j++) {
+                    bits.push({bit: '#'+(i+dimY*j), color: colorInd, x:i, y:j})
+                }
+            }
+            /* send bit to server */
+            socket.emit('draw', bits);
+        }
 
         canvas.addEventListener('mousedown', (e) => {
             const draw = (e) => {
