@@ -89,7 +89,11 @@ io.on('connection', async (socket) => {
     socket.emit('loadDrawing', d);
 
     socket.on('draw', (data) => {
-        client.bitField("img",[{ operation: 'SET', encoding: 'u4', offset: data.bit, value: data.color}])
+        const op = [];
+        data.bits.forEach((v) => {
+            op.push({ operation: 'SET', encoding: 'u4', offset: v, value: data.color});    
+        });
+        client.bitField("img",op);
         socket.broadcast.emit("draw", data);
     });
 
