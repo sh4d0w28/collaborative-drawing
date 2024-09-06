@@ -8,19 +8,21 @@ const colors = {0: '#000000', 1: '#005500',  2: '#00aa00',  3: '#00ff00',
 var colorInd = 0;
 var size = 1;
 
-const xytorect = (cx, cy, size) {
+function xytorect (cx, cy, size) {
     var x = Math.max(0, (cx-size+1));
     var y = Math.max(0, (cy-size+1));
     var w = size+1;
     var h = size+1;
-    return  {
+    var res = {
         "left": x,
         "top": y,
         "w": w,
         "h": h,
         "right": Math.min(dimX-1, x + w),
-        "bottom": Math.mini(dimY-1, y + h)
-    }
+        "bottom": Math.min(dimY-1, y + h)
+    }; 
+    //console.log(res['top'] + ".." + res['bottom'] + " " + res['left'] + ".." + res['right'] + " " + w + "x" + h);
+    return res;  
 }
 
 /* generate buttons */
@@ -36,6 +38,9 @@ Object.entries(colors).forEach((color) => {
     });
     btns.appendChild(button);
 });
+
+var slcts = document.getElementById("size");
+slcts.onchange = function(e){ size = parseInt(e.target.selectedOptions[0].value); }
 
 const canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
