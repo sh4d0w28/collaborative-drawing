@@ -1,26 +1,29 @@
-const dimX=20;
-const dimY=20;
+const dimX=500;
+const dimY=500;
+
 const colors = {0: '#000000', 1: '#005500',  2: '#00aa00',  3: '#00ff00',
                 4: '#0000ff', 5: '#0055ff',  6: '#00aaff',  7: '#00ffff',
                 8: '#ff0000', 9: '#ff5500', 10: '#ffaa00', 11: '#ffff00',
                12: '#ff00ff', 13: '#ff55ff', 14: '#ffaaff', 15: '#ffffff'
 }
 var colorInd = 0;
-var size = 1;
+var size = 7;
 
 function xytorect (cx, cy, size) {
-    var x = Math.max(0, (cx-size+1));
-    var y = Math.max(0, (cy-size+1));
-    var w = size+1;
-    var h = size+1;
+
+    var sub = Math.trunc(size/2);
+    var x = Math.max(0, (cx-sub));
+    var y = Math.max(0, (cy-sub));
+    var w = size;
+    var h = size;
     var res = {
         "left": x,
         "top": y,
         "w": w,
         "h": h,
-        "right": Math.min(dimX-1, x + w),
-        "bottom": Math.min(dimY-1, y + h)
-    }; 
+        "right": Math.min(dimX-1, x + w - 1),
+        "bottom": Math.min(dimY-1, y + h - 1)
+    };
     return res;  
 }
 
@@ -55,7 +58,7 @@ socket.on('loadDrawing', (data) => {
 socket.on('draw', (data) => {
     var fs = context.fillStyle;
     context.fillStyle = colors[data.color];
-    const bounds = xytorect(x,y,size);
+    const bounds = xytorect(data.x,data.y,data.size);
     context.fillRect(bounds.left, bounds.top, bounds.w, bounds.h);
     context.fillStyle = fs;
 });
@@ -84,6 +87,7 @@ canvas.addEventListener('mousedown', (e) => {
             y: mouseY,       // 10
             size: size        // 1
         };
+
         socket.emit('draw', data);
     };
     draw(e);

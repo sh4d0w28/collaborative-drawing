@@ -1,3 +1,6 @@
+const dimX=500;
+const dimY=500;
+
 const redis = require('redis');
 const express = require('express');
 const http = require('http');
@@ -15,9 +18,6 @@ const colors = {
     8: [0xff, 0, 0], 9: [0xff,0x55,0], 10: [0xff, 0xaa, 0], 11: [0xff, 0xff, 0], 
    12: [0xff, 0, 0xff], 13:[0xff, 0x55, 0xff], 14: [0xff, 0xaa, 0xff], 15: [0xff,0xff,0xff]
 };
-const dimX=20;
-const dimY=20;
-
 (async () => {
     // Connect to redis server
     await client.connect();
@@ -71,11 +71,11 @@ async function readimg() {
 }
 
 async function getUintClampedImage() {
-    let data = await client.get('img')
+    let data = await client.get(redis.commandOptions({returnBuffers: true}), 'img');
     if(!data){return new Uint8ClampedArray(0)}
-    const buffer = Buffer.from(data, 'binary');
-    const result = splitBytes(buffer);
+    const result = splitBytes(data);
     let uint8s = rgbToUint8ClampedArray(result);
+
     return uint8s;
 }
 
