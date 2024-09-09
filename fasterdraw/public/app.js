@@ -1,5 +1,5 @@
-const dimX=128;
-const dimY=128;
+const dimX=20;
+const dimY=20;
 const colors = {0: '#000000', 1: '#005500',  2: '#00aa00',  3: '#00ff00',
                 4: '#0000ff', 5: '#0055ff',  6: '#00aaff',  7: '#00ffff',
                 8: '#ff0000', 9: '#ff5500', 10: '#ffaa00', 11: '#ffff00',
@@ -21,7 +21,6 @@ function xytorect (cx, cy, size) {
         "right": Math.min(dimX-1, x + w),
         "bottom": Math.min(dimY-1, y + h)
     }; 
-    //console.log(res['top'] + ".." + res['bottom'] + " " + res['left'] + ".." + res['right'] + " " + w + "x" + h);
     return res;  
 }
 
@@ -50,7 +49,6 @@ const socket = io('https://edushm.com',{ path:'/node-drawcollab/socket.io'});
 // Load existing drawing from the server
 socket.on('loadDrawing', (data) => {
     var imageData = new ImageData(new Uint8ClampedArray(data),dimX,dimY)
-    console.log(imageData);
     context.putImageData(imageData, 0, 0)
 });
 

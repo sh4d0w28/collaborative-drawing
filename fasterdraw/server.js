@@ -15,8 +15,8 @@ const colors = {
     8: [0xff, 0, 0], 9: [0xff,0x55,0], 10: [0xff, 0xaa, 0], 11: [0xff, 0xff, 0], 
    12: [0xff, 0, 0xff], 13:[0xff, 0x55, 0xff], 14: [0xff, 0xaa, 0xff], 15: [0xff,0xff,0xff]
 };
-const dimX=128;
-const dimY=128;
+const dimX=20;
+const dimY=20;
 
 (async () => {
     // Connect to redis server
@@ -36,7 +36,6 @@ app.get('/im', async (req, res) => {
     res.setHeader('Content-Type', 'text/html');
     let uint8s = await readimg()
     res.write(Buffer.from(uint8s));
-    console.log('b');
     res.end(()=>{})
 });
 
@@ -55,10 +54,10 @@ function splitBytes(buffer) {
 function rgbToUint8ClampedArray(rgbs) {
     let uint8s = new Uint8ClampedArray(dimX*dimY*4)
     rgbs.forEach((a,i) => {    
-        uint8s[i*dimY+0] = colors[a][0];
-        uint8s[i*dimY+1] = colors[a][1];
-        uint8s[i*dimY+2] = colors[a][2];
-        uint8s[i*dimY+3] = 255;
+        uint8s[i*4+0] = colors[a][0];
+        uint8s[i*4+1] = colors[a][1];
+        uint8s[i*4+2] = colors[a][2];
+        uint8s[i*4+3] = 255;
     });
     return uint8s;
 }
@@ -76,7 +75,6 @@ async function getUintClampedImage() {
     if(!data){return new Uint8ClampedArray(0)}
     const buffer = Buffer.from(data, 'binary');
     const result = splitBytes(buffer);
-
     let uint8s = rgbToUint8ClampedArray(result);
     return uint8s;
 }
@@ -91,7 +89,7 @@ io.on('connection', async (socket) => {
     socket.on('draw', (data) => {
         const op = [];
         data.bits.forEach((v) => {
-            op.push({ operation: 'SET', encoding: 'u4', offset: v, value: data.color});    
+            op.push({ operation: 'SET', encoding: 'u4', offset: '#'+v, value: data.color});    
         });
         client.bitField("img",op);
         socket.broadcast.emit("draw", data);
